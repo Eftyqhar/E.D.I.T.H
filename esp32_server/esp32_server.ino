@@ -41,48 +41,9 @@ float temperature = 0.0;
 float humidity = 0.0;
 float currentVal = 0.0;
 float powerVal = 0.0;
-// float currentCalibrationOffset = 0.0; 
 
 unsigned long previousMillis = 0;
 const long interval = 2000; 
-
-/* === Current Sensor er Function gulo comment kora holo ===
-float getVPP() {
-  float result;
-  int readValue;
-  int maxValue = 0;
-  int minValue = 4095;
-  uint32_t start_time = millis();
-  
-  while((millis() - start_time) < 25) {
-     readValue = analogRead(currentPin);
-     if (readValue > maxValue) {
-         maxValue = readValue;
-     }
-     if (readValue < minValue) {
-         minValue = readValue;
-     }
-  }
-  
-  result = ((maxValue - minValue) * 3.3) / 4095.0;
-  return result;
-}
-
-void calibrateACS712() {
-  Serial.println("Calibrating Current Sensor... Keep all loads OFF.");
-  float tempVpp = 0;
-  for(int i=0; i<10; i++) {
-     tempVpp += getVPP();
-     delay(10);
-  }
-  float avgVpp = tempVpp / 10.0;
-  float VRMS = (avgVpp / 2.0) * 0.707;
-  currentCalibrationOffset = VRMS / 0.1221;
-  Serial.print("Calibration Offset (Noise Base): ");
-  Serial.println(currentCalibrationOffset);
-}
-========================================================= */
-
 String getWebPage() {
   String html = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
   html += "<title>Smart Home</title>";
@@ -289,27 +250,10 @@ void loop() {
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-
     float t = dht.readTemperature();
     float h = dht.readHumidity();
     if (!isnan(t)) temperature = t;
     if (!isnan(h)) humidity = h;
-
-    /* === Loop er vetor Current er hishab comment kora holo ===
-    float Vpp = getVPP(); 
-    float VRMS = (Vpp / 2.0) * 0.707; 
-    
-    float rawCurrent = VRMS / 0.1221; 
-    
-    currentVal = rawCurrent - currentCalibrationOffset;
-    
-    if(currentVal < 0.05) {
-      currentVal = 0.0;
-    }
-    
-    powerVal = 220.0 * currentVal;
-    ========================================================= */
-
     Serial.println("Temp: " + String(temperature) + "C, Hum: " + String(humidity) + "%");
     // Serial.println("Current: " + String(currentVal) + "A, Power: " + String(powerVal) + "W");
 
@@ -338,12 +282,6 @@ void loop() {
       if (!Firebase.RTDB.setFloat(&fbdo, "/SmartHome/Humidity", humidity)) {
         Serial.println("Firebase Error (Hum): " + fbdo.errorReason());
       }
-
-      /* === Firebase e Current/Power pathano comment kora holo ===
-      Firebase.RTDB.setFloat(&fbdo, "/SmartHome/Current", currentVal);
-      Firebase.RTDB.setFloat(&fbdo, "/SmartHome/Power", powerVal);
-      ========================================================== */
-
       Firebase.RTDB.setBool(&fbdo, "/SmartHome/Relay1", relay1State);
       Firebase.RTDB.setBool(&fbdo, "/SmartHome/Relay2", relay2State);
       Firebase.RTDB.setBool(&fbdo, "/SmartHome/Relay3", relay3State);
